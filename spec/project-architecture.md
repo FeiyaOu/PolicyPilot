@@ -189,6 +189,20 @@ The project should support multiple retrieval modes:
 
 The Retrieval Lab should make these modes visible and comparable.
 
+Hybrid score fusion starts as a deterministic scoring contract before concrete retrievers are added:
+
+```text
+fused_score = alpha * vector_score + (1 - alpha) * bm25_score
+```
+
+- `alpha=1.0` means vector-only ranking
+- `alpha=0.0` means BM25-only ranking
+- missing scores default to `0.0`
+- results are sorted by `fused_score` descending
+- upstream FAISS distances and BM25 raw scores should be normalized before fusion
+
+This follows the same idea as the learning examples in `RAG 高级技术/CASE-高效召回`, where BM25 scores are normalized, FAISS distances are converted to similarity scores, and both are merged with a configurable vector weight.
+
 ### Step 4: Reranking
 
 Use a BGE reranker such as `BAAI/bge-reranker-base` for candidate reranking.
