@@ -278,12 +278,30 @@ Reason:
 
 ### 7.2 Multi-Query Retrieval
 
+Completed or currently in PR depending on merge state:
+
+- query variant normalization
+- original query is always included
+- empty variants fall back to the original query
+- retrieval hits are deduplicated by `chunk_id`
+- duplicate chunk strategy is highest score wins
+- output keeps original query and query variants for observability
+
+Important files:
+
+```text
+src/retrieval/multi_query.py
+tests/retrieval/test_multi_query.py
+```
+
+Remaining later work:
+
 Needs:
 
 - query variant list schema
-- deduplication by `chunk_id`
-- decision about duplicate strategy: keep highest score or first hit
-- fallback to original query when variants are empty
+- LLM or rule-based query variant generation
+- retrieval orchestration that runs each query variant against a retriever
+- integration with BM25, vector, or hybrid retrieval
 
 Planned tests:
 
