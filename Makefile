@@ -1,6 +1,6 @@
 PYTHON ?= /usr/local/bin/python3
 
-.PHONY: install-dev test test-ingestion
+.PHONY: install-dev test test-ingestion test-retrieval
 
 install-dev:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -11,3 +11,6 @@ test:
 
 test-ingestion:
 	$(PYTHON) -m pytest tests/ingestion
+
+test-retrieval:
+	$(PYTHON) -m pytest tests/retrieval
