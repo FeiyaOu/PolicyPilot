@@ -1,3 +1,5 @@
+import json
+
 from src.app_services.upload_flow import BuildRequest, DocumentInput
 from src.ingestion.models import DocumentChunk
 from src.ingestion.pdf_ingestion import IngestionSummary, IngestionWarning, PdfIngestionResult
@@ -127,3 +129,24 @@ def test_build_knowledge_base_rejects_empty_build_request():
         assert "document" in str(error)
     else:
         raise AssertionError("Expected empty build request to raise ValueError")
+
+
+def test_build_knowledge_base_can_persist_chunks_jsonl(tmp_path, monkeypatch):
+    raw_pdf = tmp_path / "默认政策.pdf"
+    raw_pdf.write_bytes(b"raw pdf")
+    request = BuildRequest(
+        documents=[
+            DocumentInput(source_file="默认政策.pdf", content=None, path=raw_pdf, origin="raw")
+        ]
+    )
+    output_path = tmp_path / "runtime" / "processed" / "chunks.jsonl"
+
+    def fake_ingest_pdf_file(path):
+        return make_result("默认政策.pdf", 1, "默认政策内容")
+
+    monkeypatch.setattr(build_service, "ingest_pdf_file", fake_ingest_pdf_file)
+
+    result = build_service.build_knowledge_base(request, chunk_output_path=output_path)
+
+    records = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines()]
+    assert records == [result.chunks[0].to_dict()]
