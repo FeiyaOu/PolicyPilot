@@ -1,0 +1,559 @@
+# PolicyPilot RAG - Project Architecture
+
+## 1. Purpose
+
+PolicyPilot RAG is an interview-ready RAG showcase project. It turns the isolated RAG scripts in the existing notes into one coherent product: an enterprise policy knowledge assistant for bank staff.
+
+The goal is not only to answer questions from documents. The goal is to demonstrate a complete RAG system lifecycle:
+
+- document ingestion
+- chunking and source tracing
+- dense vector retrieval
+- BM25 sparse retrieval
+- hybrid retrieval
+- query rewriting
+- multi-query retrieval
+- reranking
+- cited answer generation
+- knowledge-base health checks
+- conversation knowledge extraction
+- knowledge-base version comparison
+- retrieval evaluation and regression testing
+
+## 2. Development Method
+
+We will use SDD first, then TDD.
+
+In this project, SDD means Specification-Driven / Scenario-Driven Development:
+
+1. Define the product scenario.
+2. Define user roles and workflows.
+3. Define the RAG pipeline behavior.
+4. Define acceptance criteria before implementation.
+5. Convert important behavior into tests.
+6. Implement with TDD where practical.
+
+TDD will be used mainly for deterministic parts:
+
+- document chunk metadata handling
+- query rewrite result parsing
+- hybrid score fusion
+- deduplication of multi-query results
+- rerank result ordering
+- knowledge health report schema
+- version diff logic
+- evaluation metric calculation
+
+LLM outputs are probabilistic, so tests around LLM behavior should validate structure, fallbacks, and pipeline behavior rather than exact wording.
+
+## 3. Interview Positioning
+
+The project should be presented as:
+
+> An enterprise policy RAG assistant that helps bank employees query internal policy documents with citations, compare retrieval strategies, monitor knowledge-base health, and evaluate knowledge-base versions.
+
+The key interview message:
+
+> I started from a basic PDF RAG assistant, then improved retrieval quality with query rewriting, multi-query search, BM25 + vector hybrid retrieval, and reranking. After that I added RAG operations: citation tracing, health checks, conversation-based knowledge extraction, version comparison, and regression evaluation.
+
+## 4. Topic And Scenario
+
+### Topic
+
+Enterprise Policy Knowledge Copilot for bank branch staff.
+
+### Primary Scenario
+
+A bank customer manager needs to ask questions about internal assessment policies, complaint handling, evaluation rules, and branch operating procedures.
+
+Example user questions:
+
+- 客户经理被投诉一次会扣多少分？
+- 投诉会不会影响年度评聘？
+- 客户经理每年评聘申报时间是什么时候？
+- 如果客户经理既有业绩问题又有投诉记录，考核怎么处理？
+- 上面说的投诉处理流程有没有例外情况？
+
+The system should answer with source evidence, not just generate text.
+
+## 5. Product Shape
+
+The first showcase version will use Streamlit as the demo and observability interface.
+
+Streamlit is used because it is fast for AI demos, dashboards, and interview presentation. It is not the core architecture. The core RAG logic should live in modular Python services under `src/`, so the UI can later be replaced by FastAPI + React/Vue if needed.
+
+Suggested app sections:
+
+1. Ask Policy Assistant
+2. Retrieval Lab
+3. Knowledge Health
+4. KB Version Compare
+5. Evaluation Report
+
+## 6. High-Level Architecture
+
+```text
+Streamlit UI
+    |
+    v
+Application Service Layer
+    |
+    +-- Query Rewrite Service
+    +-- Retrieval Service
+    +-- Rerank Service
+    +-- Answer Generation Service
+    +-- Knowledge Health Service
+    +-- Conversation Knowledge Service
+    +-- Evaluation Service
+    |
+    v
+Storage Layer
+    |
+    +-- Raw documents
+    +-- Processed chunks
+    +-- FAISS index for demo retrieval
+    +-- BM25 index for sparse retrieval
+    +-- Metadata and evaluation artifacts
+```
+
+## 7. Core RAG Pipeline
+
+### Step 1: Ingestion
+
+Input sources:
+
+- PDF policy documents
+- optional markdown/text policy files
+- optional conversation logs
+
+Processing:
+
+- extract text
+- split into chunks
+- keep metadata:
+  - document name
+  - page number
+  - chunk id
+  - section title if available
+  - version id
+
+### Step 2: Query Understanding
+
+The query rewrite layer should handle:
+
+- context-dependent questions
+- vague references such as “这个”, “它”, “上面说的”
+- comparative questions
+- multi-intent questions
+- rhetorical or emotional questions
+- web-search-needed detection for time-sensitive questions
+
+For the first local version, web search can be represented as a decision and rewritten search strategy. Actual web search integration can be a later extension.
+
+### Step 3: Retrieval
+
+The project should support multiple retrieval modes:
+
+- vector-only retrieval with FAISS
+- BM25-only retrieval
+- hybrid retrieval with weighted score fusion
+- multi-query retrieval
+- hybrid + multi-query retrieval
+- hybrid + multi-query + rerank
+
+The Retrieval Lab should make these modes visible and comparable.
+
+### Step 4: Reranking
+
+Use a BGE reranker such as `BAAI/bge-reranker-base` for candidate reranking.
+
+Pipeline:
+
+```text
+query
+→ generate candidates with hybrid/multi-query retrieval
+→ rerank candidates with cross-encoder
+→ keep top final chunks
+→ generate cited answer
+```
+
+### Step 5: Answer Generation
+
+The answer generator should:
+
+- answer only from retrieved context
+- cite source document and page/chunk
+- say when evidence is insufficient
+- expose retrieved evidence in the UI
+
+## 8. Knowledge Operations
+
+### Knowledge Health
+
+The system should analyze a knowledge base for:
+
+- missing knowledge
+- outdated knowledge
+- conflicting knowledge
+- overall health score
+- suggested improvements
+
+This is important because it shows the project is more than a chatbot.
+
+### Conversation Knowledge Extraction
+
+The system should extract durable knowledge from conversations:
+
+- facts
+- procedures
+- policy clarifications
+- common Q&A
+- precautions
+
+It should avoid storing temporary user-specific needs as permanent knowledge.
+
+### Version Management
+
+The system should support comparing knowledge-base versions:
+
+- added chunks
+- removed chunks
+- modified chunks
+- unchanged chunks
+- retrieval accuracy before/after
+- regression test pass rate
+
+## 9. Storage Decision
+
+### Initial Demo Storage
+
+Use FAISS for the first version.
+
+Reason:
+
+- simple local setup
+- fast retrieval
+- good for small demo datasets
+- easy to explain retrieval mechanics
+- suitable for GitHub + Streamlit prototype
+
+Do not commit large generated indexes or private vector databases to Git.
+
+Recommended Git strategy:
+
+```text
+Commit:
+- sample public/synthetic documents
+- ingestion scripts
+- evaluation test cases
+- README and architecture docs
+
+Do not commit:
+- .env
+- API keys
+- private PDFs
+- large vector indexes
+- downloaded reranker models
+```
+
+Recommended `.gitignore` entries later:
+
+```gitignore
+.env
+__pycache__/
+*.pyc
+indexes/
+vector_db/
+vector_db_hybrid/
+models/
+```
+
+### Production Upgrade Path
+
+The retrieval layer should be designed so FAISS can later be replaced.
+
+Potential production options:
+
+- PostgreSQL + pgvector: best when relational metadata, permissions, conversations, evaluations, and vector search should live together.
+- Qdrant: strong dedicated vector database with metadata filtering and simple deployment.
+- Milvus/Zilliz: stronger for large-scale vector infrastructure.
+- Chroma: useful local developer-friendly vector store, but less impressive as an enterprise production choice.
+
+Interview explanation:
+
+> I used FAISS for a lightweight reproducible demo. For production, I would use PostgreSQL with pgvector if I need relational metadata and operational records in one system, or Qdrant/Milvus if vector search scale and filtering are the main concern.
+
+## 10. Deployment Decision
+
+The first deployable demo should use:
+
+- GitHub repository for code
+- Streamlit UI for product demo
+- Streamlit Community Cloud or Hugging Face Spaces for public access if reachable by the target audience
+
+Important note:
+
+A GitHub repo alone does not create a clickable web app. The Streamlit app needs to be deployed to a hosting service to produce a public URL.
+
+For China-based interviewers, Streamlit Community Cloud accessibility may be inconsistent depending on network conditions. A safer plan is:
+
+1. Keep the app runnable locally with one command.
+2. Provide screenshots/GIFs in README.
+3. Optionally deploy a second mirror using a China-accessible platform if needed.
+4. Keep the backend modular so deployment target can change.
+
+## 11. Proposed Project Structure
+
+```text
+PolicyPilot-RAG/
+  README.md
+  project-architecture.md
+  requirements.txt
+  .env.example
+  .gitignore
+
+  data/
+    raw/
+    processed/
+    sample_queries/
+
+  indexes/
+    faiss/
+    bm25/
+
+  src/
+    ingestion/
+      pdf_loader.py
+      chunker.py
+      metadata.py
+
+    query_rewrite/
+      rewriter.py
+      schemas.py
+
+    retrieval/
+      base.py
+      faiss_store.py
+      bm25_store.py
+      hybrid.py
+      multi_query.py
+
+    reranking/
+      bge_reranker.py
+
+    generation/
+      answerer.py
+      prompts.py
+
+    kb_ops/
+      health_check.py
+      conversation_extractor.py
+      versioning.py
+
+    evaluation/
+      test_cases.py
+      metrics.py
+      regression.py
+
+    app_services/
+      rag_pipeline.py
+      retrieval_lab.py
+      health_dashboard.py
+
+  app/
+    streamlit_app.py
+
+  scripts/
+    ingest.py
+    ask.py
+    evaluate.py
+    health_check.py
+```
+
+## 12. First Acceptance Criteria
+
+Before implementation, the first version should satisfy these behaviors:
+
+1. A user can upload or use sample policy documents.
+2. The system can build a searchable index.
+3. The user can ask a policy question and receive an answer with citations.
+4. The user can inspect retrieved chunks and scores.
+5. The user can compare retrieval modes.
+6. The system can run a small evaluation set.
+7. The system can produce a basic knowledge health report.
+8. The project can run locally from documented commands.
+
+## 13. Review Questions
+
+The following decisions are accepted for version 1:
+
+1. Project name: `PolicyPilot-RAG`.
+2. Main scenario: bank internal policy assistant.
+3. UI: Streamlit for the first demo.
+4. Storage: FAISS for version 1, with pgvector/Qdrant as the production upgrade path.
+5. Language: Chinese UI and Chinese README.
+6. Dataset: start with the existing bank policy PDF; more PDFs can be added later.
+7. Deployment priority: local demo first, public web demo second.
+
+## 14. User Interaction Plan
+
+The user should feel they are using a policy assistant, but the interviewer should be able to inspect the RAG pipeline behind every answer.
+
+### 14.1 First-Time Setup Flow
+
+1. User opens the Streamlit app.
+2. App checks whether an index already exists.
+3. If no index exists, the app asks the user to build one from the configured PDF folder.
+4. User clicks `构建知识库`.
+5. App extracts text, chunks documents, stores metadata, builds FAISS and BM25 indexes, and reports indexing results.
+
+Indexing result should show:
+
+- processed document count
+- chunk count
+- embedding model
+- vector store path
+- BM25 index status
+- warnings for pages with missing text
+
+### 14.2 Main Question-Answer Flow
+
+1. User enters a policy question in Chinese.
+2. User optionally provides conversation context.
+3. App rewrites the query if needed.
+4. App generates multiple query variants.
+5. App retrieves candidates through the selected retrieval strategy.
+6. App reranks candidates if rerank mode is enabled.
+7. App generates an answer from the final context.
+8. App displays citations and the evidence chunks.
+
+The answer page should show:
+
+- final answer
+- source PDF name and page number
+- confidence or evidence sufficiency indicator
+- rewritten query
+- generated query variants
+- retrieved chunks
+- retrieval scores
+- rerank scores when available
+
+### 14.3 Retrieval Lab Flow
+
+The Retrieval Lab is for demonstrating technical depth.
+
+User selects one question and compares:
+
+- vector-only retrieval
+- BM25-only retrieval
+- hybrid retrieval
+- hybrid + multi-query retrieval
+- hybrid + multi-query + rerank
+
+For each mode, the app should show:
+
+- top-k chunks
+- scores
+- source pages
+- overlap between methods
+- which method produced the final answer context
+
+### 14.4 Knowledge Health Flow
+
+The user runs a health check over the current knowledge base.
+
+The app should show:
+
+- missing knowledge
+- outdated knowledge
+- conflicting knowledge
+- health score
+- suggested fixes
+
+This section demonstrates that the project handles RAG operations, not only RAG answering.
+
+### 14.5 Evaluation Flow
+
+The user runs a small test set of policy questions.
+
+The app should show:
+
+- test question
+- expected evidence or expected answer keywords
+- retrieved chunks
+- pass/fail result
+- recall@k
+- answer citation presence
+- regression result after a knowledge-base update
+
+## 15. LangChain Decision
+
+Use LangChain selectively, not as the whole architecture.
+
+LangChain is useful in this project for:
+
+- PDF/document loader integrations when helpful
+- text splitting with `RecursiveCharacterTextSplitter`
+- FAISS vector store integration
+- document object conventions
+- optional model wrappers
+
+Do not hide the core RAG logic inside a single LangChain chain.
+
+The following logic should stay explicit in our own modules so it is easy to test and explain in interviews:
+
+- query rewrite routing
+- multi-query generation and deduplication
+- BM25 retrieval
+- hybrid score fusion
+- rerank orchestration
+- citation metadata handling
+- health-check schemas
+- version comparison
+- evaluation metrics
+
+Interview explanation:
+
+> I use LangChain for reliable building blocks such as text splitting and FAISS integration, but I keep the retrieval pipeline explicit because the purpose of this project is to demonstrate how RAG works: query rewriting, hybrid retrieval, reranking, citations, evaluation, and knowledge operations.
+
+## 16. Future V2 Agentic RAG Plan
+
+LangGraph will not be used in version 1.
+
+Version 1 should keep the RAG pipeline explicit, simple, and testable. The first goal is to demonstrate retrieval mechanics and RAG quality improvement, not to build an autonomous agent framework.
+
+LangGraph may be introduced in version 2 if the project evolves into an agentic RAG system with stateful branching, retries, evidence checks, and human review.
+
+Potential version 2 workflow:
+
+```text
+用户提问
+→ 判断问题类型
+→ 判断是否需要 Query 改写
+→ 判断是否需要多意图拆分
+→ 执行检索
+→ 判断证据是否足够
+→ 如果证据不足，扩大检索或切换检索策略
+→ 如果仍然不足，标记为缺失知识
+→ Rerank 候选文档
+→ 生成答案
+→ 检查引用是否完整
+→ 如果引用不足，重新生成或提示证据不足
+→ 提取可沉淀的对话知识候选
+→ 等待人工审核是否写入知识库
+```
+
+LangGraph would be useful for:
+
+- evidence sufficiency checks
+- conditional retrieval retries
+- fallback from vector retrieval to hybrid retrieval
+- multi-intent query routing
+- citation validation and answer regeneration
+- human-in-the-loop knowledge updates
+- conversation knowledge deposition workflow
+- knowledge health repair workflow
+
+Interview explanation:
+
+> I considered LangGraph, but did not use it in version 1 because the first milestone should make the RAG pipeline transparent and easy to test. LangGraph is a good version 2 choice when the assistant needs stateful branching, evidence sufficiency checks, retry loops, and human approval for knowledge-base updates.
