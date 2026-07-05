@@ -305,6 +305,19 @@ Reason:
 
 When implementation reaches Streamlit, LangChain, FAISS, DashScope, or rerank integration, add the verified runtime dependencies to `requirements.txt` and document the tested Python version.
 
+### PDF Parsing Dependency Note
+
+The first PDF file-loader implementation uses `PyPDF2==3.0.1` because the existing learning examples in this workspace already use PyPDF2 and the dependency has been verified in Python 3.12 for the current TDD slice.
+
+PyPDF2 emits a deprecation warning recommending migration to `pypdf`. This warning does not block the current TDD flow, but it should be tracked as a future cleanup item.
+
+Future migration plan:
+
+- keep `PyPDF2==3.0.1` for the current implementation slice
+- consider replacing it with `pypdf` before the ingestion module becomes stable
+- add/adjust tests before migration to ensure `ingest_pdf_file()` behavior remains unchanged
+- update `requirements.txt` only after the replacement is verified in Python 3.12
+
 ## 11. Deployment Decision
 
 The first deployable demo should use:
