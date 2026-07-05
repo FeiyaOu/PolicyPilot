@@ -6,6 +6,7 @@ from typing import Protocol
 
 from PyPDF2 import PdfReader
 
+from src.ingestion.chunk_splitter import SplitConfig, split_page_text
 from src.ingestion.models import DocumentChunk
 
 
@@ -39,7 +40,11 @@ class PdfIngestionResult:
     summary: IngestionSummary
 
 
-def ingest_pdf_reader(reader: PdfReaderLike, source_file: str) -> PdfIngestionResult:
+def ingest_pdf_reader(
+    reader: PdfReaderLike,
+    source_file: str,
+    split_config: SplitConfig | None = None,
+) -> PdfIngestionResult:
     chunks: list[DocumentChunk] = []
     warnings: list[IngestionWarning] = []
 
@@ -55,11 +60,12 @@ def ingest_pdf_reader(reader: PdfReaderLike, source_file: str) -> PdfIngestionRe
             )
             continue
 
-        chunks.append(
-            DocumentChunk(
-                content=text.strip(),
+        chunks.extend(
+            split_page_text(
+                text=text,
                 source_file=source_file,
                 page_number=page_index,
+                config=split_config,
             )
         )
 
@@ -72,7 +78,7 @@ def ingest_pdf_reader(reader: PdfReaderLike, source_file: str) -> PdfIngestionRe
     return PdfIngestionResult(chunks=chunks, warnings=warnings, summary=summary)
 
 
-def ingest_pdf_file(pdf_path: str | Path) -> PdfIngestionResult:
+def ingest_pdf_file(pdf_path: str | Path, split_config: SplitConfig | None = None) -> PdfIngestionResult:
     path = Path(pdf_path)
     if not path.exists():
         raise FileNotFoundError(f"PDF file not found: {path}")
@@ -80,4 +86,4 @@ def ingest_pdf_file(pdf_path: str | Path) -> PdfIngestionResult:
         raise ValueError(f"Expected a PDF file, got: {path.name}")
 
     reader = PdfReader(path)
-    return ingest_pdf_reader(reader, source_file=path.name)
+    return ingest_pdf_reader(reader, source_file=path.name, split_config=split_config)

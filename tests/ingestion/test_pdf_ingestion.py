@@ -1,3 +1,4 @@
+from src.ingestion.chunk_splitter import SplitConfig
 from src.ingestion.pdf_ingestion import ingest_pdf_reader
 
 
@@ -50,3 +51,22 @@ def test_ingest_pdf_reader_warns_for_pages_without_text_and_continues():
     assert [chunk.page_number for chunk in result.chunks] == [1, 4]
     assert [warning.page_number for warning in result.warnings] == [2, 3]
     assert all("No extractable text" in warning.message for warning in result.warnings)
+
+
+def test_ingest_pdf_reader_splits_long_page_text_with_page_metadata():
+    reader = FakePdfReader(
+        [
+            FakePage("第一条客户经理应遵守投诉处理规则。第二条客户经理应按时完成评聘申报。第三条客户经理应保留处理记录。"),
+        ]
+    )
+
+    result = ingest_pdf_reader(
+        reader,
+        source_file="policy.pdf",
+        split_config=SplitConfig(chunk_size=28, chunk_overlap=8),
+    )
+
+    assert len(result.chunks) > 1
+    assert result.summary.chunk_count == len(result.chunks)
+    assert {chunk.page_number for chunk in result.chunks} == {1}
+    assert [chunk.metadata["chunk_index"] for chunk in result.chunks] == list(range(len(result.chunks)))

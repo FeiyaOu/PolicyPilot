@@ -137,6 +137,25 @@ Processing:
   - section title if available
   - version id
 
+Chunk splitting strategy:
+
+- split page by page instead of concatenating the full PDF first
+- preserve `source_file` and `page_number` on every chunk
+- use Chinese-aware separators before falling back to character-level splitting
+- default `chunk_size` is 800 characters
+- default `chunk_overlap` is 150 characters
+- store chunk-local metadata such as `chunk_index`, `start_char`, and `end_char`
+
+Default separators:
+
+```python
+["\n\n", "\n", "。", "；", "，", ".", ";", ",", " ", ""]
+```
+
+Reason:
+
+The previous learning examples used a LangChain-style recursive splitter with `chunk_size=1000`, `chunk_overlap=200`, and mostly English separators. This project uses the same general idea but adapts it for Chinese bank policy PDFs and stable source citation. Page-aware splitting avoids fragile page-number reconstruction after full-document splitting.
+
 ### Step 2: Query Understanding
 
 The query rewrite layer should handle:
