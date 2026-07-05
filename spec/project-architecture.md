@@ -262,11 +262,45 @@ Recommended `.gitignore` entries later:
 .env
 __pycache__/
 *.pyc
+runtime/
 indexes/
 vector_db/
 vector_db_hybrid/
 models/
 ```
+
+### Runtime Artifact Storage Policy
+
+Uploaded files and generated indexes are runtime artifacts. They are stored under `runtime/` locally, ignored by Git, and can be regenerated from safe sample PDFs. In production, replace local runtime storage with object storage, a database, and a vector database.
+
+Recommended local layout:
+
+```text
+data/
+  raw/                         # safe sample/default PDFs; may be committed only if non-private
+
+runtime/
+  uploads/                     # user-uploaded PDFs during local/demo runtime
+  processed/
+    chunks.jsonl               # chunk text and metadata; source of truth for local rebuilds
+  indexes/
+    faiss/                     # local FAISS vector index files
+    bm25/                      # BM25 cache/index artifacts
+  evaluation/                  # generated evaluation reports
+```
+
+Storage rules:
+
+- `data/raw/` is for safe sample documents that can be used to rebuild a demo index.
+- `runtime/uploads/` is for files uploaded while the app is running.
+- `runtime/processed/chunks.jsonl` should be the local source of truth for chunk text and citation metadata.
+- FAISS and BM25 indexes are generated artifacts and should be rebuildable from `chunks.jsonl`.
+- `runtime/` must not be committed to Git.
+- Do not upload private or real internal bank documents to public Streamlit deployments.
+
+Streamlit deployment note:
+
+Streamlit Community Cloud provides a filesystem, but it should be treated as ephemeral demo storage rather than durable backend storage. For the first public demo, use safe sample PDFs and regenerate indexes when needed. For production, store PDFs in object storage, metadata/evaluation records in a database, and vectors in pgvector, Qdrant, Milvus, or another production vector store.
 
 ### Production Upgrade Path
 
