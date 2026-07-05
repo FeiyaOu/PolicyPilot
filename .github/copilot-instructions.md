@@ -34,8 +34,9 @@ Before coding a new feature:
 1. Check `spec/project-architecture.md`.
 2. Check `spec/user-stories.md`.
 3. Check `spec/test-plan.md`.
-4. Add or update tests for deterministic behavior.
-5. Implement the smallest code needed to pass the focused test.
+4. Check `spec/development-workflow.md`.
+5. Add or update tests for deterministic behavior.
+6. Implement the smallest code needed to pass the focused test.
 
 Prefer TDD for deterministic logic:
 
