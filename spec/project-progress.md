@@ -311,13 +311,30 @@ tests/retrieval/test_multi_query.py
 
 ### 7.3 BM25 Retrieval
 
+Completed or currently in PR depending on merge state:
+
+- Chinese tokenization with `jieba`
+- Okapi BM25 indexing with `rank_bm25.BM25Okapi`
+- BM25 retriever can be built from chunk records or `chunks.jsonl`
+- search returns chunk ID, normalized BM25 score, content, source file, page number, and metadata
+- empty corpus and no-match queries return an empty list
+
+Important files:
+
+```text
+src/retrieval/bm25.py
+tests/retrieval/test_bm25.py
+requirements.txt
+```
+
+Remaining later work:
+
 Needs:
 
-- Chinese tokenization strategy
-- load chunks from JSONL
-- build sparse index
-- return chunk IDs and normalized BM25 scores
-- keep original chunk metadata available for citation
+- retrieval service orchestration
+- integration with multi-query retrieval
+- integration with hybrid score fusion
+- Retrieval Lab display of BM25-only mode
 
 Possible dependency:
 
