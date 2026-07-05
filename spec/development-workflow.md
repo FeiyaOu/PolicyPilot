@@ -48,6 +48,39 @@ git log --oneline --decorate -5
 
 ## 4. 每条 Feature 的标准流程
 
+### 4.0 `start next feature` 触发规则
+
+当用户说：
+
+```text
+start next feature
+next feature
+开始下一个 feature
+新建 feature branch
+```
+
+AI agent 应先执行 feature-start git workflow，不要直接改代码。
+
+标准动作：
+
+```bash
+git status --short --branch
+git switch main
+git pull --ff-only
+git switch -c feat/<feature-name>
+make test
+```
+
+如果工作区不干净，先停止并汇报当前改动，不要切分支，也不要自动 stash 或丢弃用户改动。
+
+如果用户没有给出 feature 名称，先询问一个短分支名，例如：
+
+```text
+feat/chunk-storage-jsonl
+feat/vector-indexing
+feat/hybrid-retrieval
+```
+
 ### 4.1 确认前一个 PR 已合并
 
 在 GitHub 上确认上一条 feature PR 已经 merge 到 `main`。
