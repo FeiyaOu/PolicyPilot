@@ -4,8 +4,10 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+runtime/
 indexes/
 vector_db/
 vector_db_hybrid/
 models/
 data/processed/
+study/
