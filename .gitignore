@@ -10,3 +10,4 @@ vector_db/
 vector_db_hybrid/
 models/
 data/processed/
+study/
