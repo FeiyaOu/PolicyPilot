@@ -283,7 +283,29 @@ Interview explanation:
 
 > I used FAISS for a lightweight reproducible demo. For production, I would use PostgreSQL with pgvector if I need relational metadata and operational records in one system, or Qdrant/Milvus if vector search scale and filtering are the main concern.
 
-## 10. Deployment Decision
+## 10. Dependency Management Decision
+
+The project currently keeps runtime dependencies intentionally minimal.
+
+Do not add a formal `requirements.txt` too early. Streamlit, LangChain, FAISS, DashScope, reranker models, and other runtime dependencies should be added only when the corresponding RAG pipeline implementation begins and the dependency versions have been verified in the Python 3.12 environment.
+
+Current dependency approach:
+
+- `pyproject.toml` stores project metadata and pytest configuration.
+- `requirements-dev.txt` stores development/test dependencies such as `pytest`.
+- `Makefile` provides stable local commands for development and testing.
+- `requirements.txt` will be added later for verified runtime dependencies.
+
+Reason:
+
+- avoid committing unverified dependencies
+- keep the early SDD/TDD phase clean
+- prevent FAISS/Python-version conflicts
+- make future deployment dependencies easier to explain and reproduce
+
+When implementation reaches Streamlit, LangChain, FAISS, DashScope, or rerank integration, add the verified runtime dependencies to `requirements.txt` and document the tested Python version.
+
+## 11. Deployment Decision
 
 The first deployable demo should use:
 
@@ -302,7 +324,7 @@ For China-based interviewers, Streamlit Community Cloud accessibility may be inc
 3. Optionally deploy a second mirror using a China-accessible platform if needed.
 4. Keep the backend modular so deployment target can change.
 
-## 11. Proposed Project Structure
+## 12. Proposed Project Structure
 
 ```text
 PolicyPilot-RAG/
@@ -370,7 +392,7 @@ PolicyPilot-RAG/
     health_check.py
 ```
 
-## 12. First Acceptance Criteria
+## 13. First Acceptance Criteria
 
 Before implementation, the first version should satisfy these behaviors:
 
@@ -383,7 +405,7 @@ Before implementation, the first version should satisfy these behaviors:
 7. The system can produce a basic knowledge health report.
 8. The project can run locally from documented commands.
 
-## 13. Review Questions
+## 14. Review Questions
 
 The following decisions are accepted for version 1:
 
@@ -395,7 +417,7 @@ The following decisions are accepted for version 1:
 6. Dataset: start with the existing bank policy PDF; more PDFs can be added later.
 7. Deployment priority: local demo first, public web demo second.
 
-## 14. User Interaction Plan
+## 15. User Interaction Plan
 
 The user should feel they are using a policy assistant, but the interviewer should be able to inspect the RAG pipeline behind every answer.
 
@@ -486,7 +508,7 @@ The app should show:
 - answer citation presence
 - regression result after a knowledge-base update
 
-## 15. LangChain Decision
+## 16. LangChain Decision
 
 Use LangChain selectively, not as the whole architecture.
 
@@ -516,7 +538,7 @@ Interview explanation:
 
 > I use LangChain for reliable building blocks such as text splitting and FAISS integration, but I keep the retrieval pipeline explicit because the purpose of this project is to demonstrate how RAG works: query rewriting, hybrid retrieval, reranking, citations, evaluation, and knowledge operations.
 
-## 16. Future V2 Agentic RAG Plan
+## 17. Future V2 Agentic RAG Plan
 
 LangGraph will not be used in version 1.
 
