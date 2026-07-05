@@ -156,6 +156,13 @@ Reason:
 
 The previous learning examples used a LangChain-style recursive splitter with `chunk_size=1000`, `chunk_overlap=200`, and mostly English separators. This project uses the same general idea but adapts it for Chinese bank policy PDFs and stable source citation. Page-aware splitting avoids fragile page-number reconstruction after full-document splitting.
 
+Processed chunk storage:
+
+- the build service can persist final chunks to `runtime/processed/chunks.jsonl`
+- each JSONL record uses the `DocumentChunk.to_dict()` shape
+- the JSONL file is the local source of truth for later vector indexing and BM25 indexing
+- `runtime/` is ignored by Git because it contains generated or private artifacts
+
 ### Step 2: Query Understanding
 
 The query rewrite layer should handle:

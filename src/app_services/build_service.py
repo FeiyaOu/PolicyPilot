@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from io import BytesIO
+from pathlib import Path
 
 from PyPDF2 import PdfReader
 
 from src.app_services.upload_flow import BuildRequest, DocumentInput
+from src.ingestion.chunk_store import write_chunks_jsonl
 from src.ingestion.models import DocumentChunk
 from src.ingestion.pdf_ingestion import (
     IngestionSummary,
@@ -22,7 +24,7 @@ class BuildResult:
     summary: IngestionSummary
 
 
-def build_knowledge_base(request: BuildRequest) -> BuildResult:
+def build_knowledge_base(request: BuildRequest, chunk_output_path: str | Path | None = None) -> BuildResult:
     if not request.documents:
         raise ValueError("Build request must include at least one document")
 
@@ -39,6 +41,9 @@ def build_knowledge_base(request: BuildRequest) -> BuildResult:
         chunk_count=len(chunks),
         warning_count=len(warnings),
     )
+    if chunk_output_path is not None:
+        write_chunks_jsonl(chunks, chunk_output_path)
+
     return BuildResult(chunks=chunks, warnings=warnings, summary=summary)
 
 
