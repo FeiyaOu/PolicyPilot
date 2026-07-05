@@ -211,6 +211,14 @@ Multi-query retrieval also starts with a deterministic contract before adding LL
 - when the same chunk appears from multiple query variants, keep the highest score
 - returned results keep the original query and query variants for observability
 
+BM25 sparse retrieval is part of the basic retrieval layer, not an advanced rerank feature:
+
+- load processed chunk records from `runtime/processed/chunks.jsonl`
+- tokenize Chinese policy text with `jieba`
+- build an Okapi BM25 index with `rank_bm25.BM25Okapi`
+- return chunk IDs, normalized BM25 scores, content, and source metadata
+- keep reranking out of the default retrieval path until the basic vector/BM25/hybrid flow is usable
+
 ### Step 4: Reranking
 
 Use a BGE reranker such as `BAAI/bge-reranker-base` for candidate reranking.
