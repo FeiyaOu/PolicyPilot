@@ -29,6 +29,17 @@ The project should demonstrate a complete RAG lifecycle, not just a simple LLM c
 
 Use SDD before TDD, then implement incrementally.
 
+When the user says "start next feature", "next feature", or asks to begin a new feature branch, first run the feature-start git workflow before editing code:
+
+1. Check current git state with `git status --short --branch`.
+2. If the worktree has uncommitted changes, summarize them and ask before switching branches.
+3. If the worktree is clean, switch to `main`.
+4. Pull the latest remote main with `git pull --ff-only`.
+5. Create a new branch with a clear name, usually `feat/<feature-name>`.
+6. Run the baseline test command before writing the first failing test.
+
+If the user did not name the feature, ask for a short feature name before creating the branch.
+
 Before coding a new feature:
 
 1. Check `spec/project-architecture.md`.
