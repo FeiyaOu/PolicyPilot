@@ -203,6 +203,14 @@ fused_score = alpha * vector_score + (1 - alpha) * bm25_score
 
 This follows the same idea as the learning examples in `RAG 高级技术/CASE-高效召回`, where BM25 scores are normalized, FAISS distances are converted to similarity scores, and both are merged with a configurable vector weight.
 
+Multi-query retrieval also starts with a deterministic contract before adding LLM query generation:
+
+- normalized query variants always include the original user query
+- empty query variants fall back to the original query
+- duplicate retrieved hits are merged by `chunk_id`, not by text content
+- when the same chunk appears from multiple query variants, keep the highest score
+- returned results keep the original query and query variants for observability
+
 ### Step 4: Reranking
 
 Use a BGE reranker such as `BAAI/bge-reranker-base` for candidate reranking.
