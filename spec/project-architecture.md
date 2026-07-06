@@ -578,9 +578,11 @@ The user should feel they are using a policy assistant, but the interviewer shou
 
 1. User opens the Streamlit app.
 2. App checks whether an index already exists.
-3. If no index exists, the app asks the user to build one from the configured PDF folder.
+3. If no processed chunks exist, the app asks the user to build one from uploaded PDFs or the configured PDF folder.
 4. User clicks `构建知识库`.
-5. App extracts text, chunks documents, stores metadata, builds FAISS and BM25 indexes, and reports indexing results.
+5. App extracts text, chunks documents, stores metadata in `runtime/processed/chunks.jsonl`, and reports indexing results.
+6. BM25 retrieval is rebuilt from `chunks.jsonl` when the answer service reloads.
+7. FAISS/vector index build remains a later UI slice.
 
 Indexing result should show:
 
@@ -617,6 +619,7 @@ The first minimal Streamlit UI is a local demo surface:
 
 - keep Streamlit as a thin rendering layer under `app/streamlit_app.py`
 - route question answering through app services in `src/`
+- build `runtime/processed/chunks.jsonl` from uploaded PDFs and `data/raw` PDFs
 - show answer-ready and evidence-insufficient states
 - show citations, selected evidence chunks, and retrieval summary
 - load `runtime/processed/chunks.jsonl` when available
