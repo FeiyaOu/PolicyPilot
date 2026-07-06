@@ -9,8 +9,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.app_services.demo_answer_service import DemoAnswerProvider
+from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
+from src.app_services.ui_answer_service import UiAnswerService
 from src.generation.answer_contract import AnswerResult, AnswerStatus
-from src.app_services.demo_answer_service import DemoAnswerService, build_demo_answer_service
 
 
 st.set_page_config(
@@ -21,8 +23,11 @@ st.set_page_config(
 
 
 @st.cache_resource
-def get_answer_service() -> DemoAnswerService:
-    return build_demo_answer_service()
+def get_answer_service() -> UiAnswerService:
+    return UiAnswerService(
+        knowledge_base=load_knowledge_base(PROJECT_ROOT / "runtime" / "processed" / "chunks.jsonl"),
+        answer_provider=DemoAnswerProvider(),
+    )
 
 
 def render_answer(answer: AnswerResult) -> None:
@@ -67,7 +72,14 @@ def main() -> None:
     st.title("PolicyPilot RAG")
     st.caption("银行内部制度问答演示")
 
+    answer_service = get_answer_service()
+
     with st.sidebar:
+        st.subheader("知识库状态")
+        if answer_service.knowledge_base.status == KnowledgeBaseStatus.READY:
+            st.success(answer_service.knowledge_base.message)
+        else:
+            st.warning(answer_service.knowledge_base.message)
         top_k = st.slider("证据数量", min_value=1, max_value=4, value=2)
         min_score = st.slider("最低证据分数", min_value=0.0, max_value=1.0, value=0.2, step=0.05)
 
@@ -82,7 +94,7 @@ def main() -> None:
             st.warning("请输入问题后再开始回答。")
             return
 
-        answer = get_answer_service().answer(
+        answer = answer_service.answer(
             question=question,
             top_k=top_k,
             min_score=min_score,

@@ -619,7 +619,9 @@ The first minimal Streamlit UI is a local demo surface:
 - route question answering through app services in `src/`
 - show answer-ready and evidence-insufficient states
 - show citations, selected evidence chunks, and retrieval summary
-- use a deterministic demo retrieval service until real index loading is wired into the UI
+- load `runtime/processed/chunks.jsonl` when available
+- build BM25 retrieval from loaded chunk records for the first real local UI path
+- show a clear missing/empty knowledge-base state when chunks are not available
 - do not include rerank or real LLM/API integration in the first UI slice
 
 ### 14.3 Retrieval Lab Flow
