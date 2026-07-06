@@ -284,6 +284,14 @@ Answer output uses a stable deterministic contract before LLM integration:
 - return a fixed fallback message when evidence is insufficient
 - allow generated answer text to be attached later without changing the UI contract
 
+Basic answer generation is provider-driven:
+
+- skip provider calls when evidence is insufficient
+- pass the original question and selected context snippets to an injected answer provider
+- attach generated answer text to the stable answer output contract
+- preserve citations, contexts, and retrieval summary from evidence review
+- keep concrete LLM/API clients outside the core contract for deterministic tests
+
 ## 8. Knowledge Operations
 
 ### Knowledge Health

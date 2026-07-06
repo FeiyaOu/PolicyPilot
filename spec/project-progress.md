@@ -465,13 +465,13 @@ Remaining later work:
 
 Needs:
 
-- answer generation orchestration
-- LLM-generated answer text from selected context
+- concrete LLM answer provider integration
+- prompt template tuning from selected context
 
 Planned tests:
 
 ```text
-tests/generation/test_basic_answer_generation.py
+tests/generation/test_llm_answer_provider.py
 ```
 
 ### 7.8 Streamlit Demo UI
