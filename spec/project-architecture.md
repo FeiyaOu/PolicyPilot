@@ -260,6 +260,13 @@ The answer generator should:
 - say when evidence is insufficient
 - expose retrieved evidence in the UI
 
+Citation generation is deterministic and does not parse LLM output text:
+
+- build citation objects from retrieval result metadata
+- include source file, page number, and contributing chunk IDs
+- deduplicate citations by source file and page number
+- use fallback fields when source metadata is missing
+
 ## 8. Knowledge Operations
 
 ### Knowledge Health
