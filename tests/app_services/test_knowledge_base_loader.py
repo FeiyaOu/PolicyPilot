@@ -2,6 +2,18 @@ import json
 from pathlib import Path
 
 from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
+from src.app_services.retrieval_service import RetrievalMode
+from src.retrieval.vector_index import build_faiss_vector_index, save_faiss_vector_index
+
+
+class FakeEmbeddingProvider:
+    dimension = 2
+
+    def embed_documents(self, texts):
+        return [[1.0, 0.0] for _text in texts]
+
+    def embed_query(self, text):
+        return [1.0, 0.0]
 
 
 def write_chunks(path: Path) -> None:
@@ -36,6 +48,8 @@ def test_load_knowledge_base_builds_bm25_retrieval_service_from_chunks_jsonl(tmp
     assert result.status == KnowledgeBaseStatus.READY
     assert result.chunk_count == 1
     assert result.retrieval_service is not None
+    assert result.vector_index_loaded is False
+    assert result.available_modes == (RetrievalMode.BM25,)
     assert result.message == "已加载 1 个知识库 chunk。"
 
     search_results = result.retrieval_service.search("投诉 评聘", top_k=1)
@@ -56,3 +70,26 @@ def test_load_knowledge_base_returns_empty_status_for_empty_chunks_file(tmp_path
     assert result.chunk_count == 0
     assert result.retrieval_service is None
     assert result.message == "知识库 chunks.jsonl 为空，请重新构建知识库。"
+
+
+def test_load_knowledge_base_loads_faiss_index_when_index_and_embedding_provider_exist(tmp_path):
+    chunks_path = tmp_path / "runtime" / "processed" / "chunks.jsonl"
+    index_dir = tmp_path / "runtime" / "vector_index"
+    write_chunks(chunks_path)
+    chunk_records = [json.loads(line) for line in chunks_path.read_text(encoding="utf-8").splitlines()]
+    save_faiss_vector_index(build_faiss_vector_index(chunk_records, FakeEmbeddingProvider()), index_dir)
+
+    result = load_knowledge_base(
+        chunks_path=chunks_path,
+        vector_index_dir=index_dir,
+        embedding_provider=FakeEmbeddingProvider(),
+    )
+
+    assert result.status == KnowledgeBaseStatus.READY
+    assert result.vector_index_loaded is True
+    assert result.available_modes == (RetrievalMode.BM25, RetrievalMode.VECTOR, RetrievalMode.HYBRID)
+    assert result.message == "已加载 1 个知识库 chunk，并加载 FAISS 向量索引。"
+
+    search_results = result.retrieval_service.search("投诉 评聘", mode=RetrievalMode.HYBRID, top_k=1)
+
+    assert search_results[0].chunk_id == "chunk-1"

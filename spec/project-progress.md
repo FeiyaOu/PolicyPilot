@@ -491,6 +491,8 @@ Current minimal UI slice:
 - deterministic demo answer service in `src/`
 - real `runtime/processed/chunks.jsonl` loader
 - BM25-backed UI answer service when chunks are available
+- optional FAISS vector index loading in the knowledge-base loader
+- UI retrieval mode selector driven by available retrieval modes
 - missing/empty knowledge-base fallback state
 
 Important files:
@@ -513,7 +515,7 @@ Needs:
 - evaluation report page
 - optional system settings page
 - FAISS/vector index build from the UI
-- FAISS/vector index loading in the UI
+- real embedding provider configuration for non-test vector search
 - real LLM provider wiring
 
 Rule:

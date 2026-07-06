@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.app_services.demo_answer_service import DemoAnswerProvider
 from src.app_services.knowledge_base_build_page_service import build_knowledge_base_from_ui
 from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
+from src.app_services.retrieval_service import RetrievalMode
 from src.app_services.ui_answer_service import UiAnswerService
 from src.generation.answer_contract import AnswerResult, AnswerStatus
 
@@ -93,7 +94,7 @@ def render_build_page() -> None:
         st.caption(f"输出位置: {result.output_path}")
 
 
-def render_ask_page(answer_service: UiAnswerService, top_k: int, min_score: float) -> None:
+def render_ask_page(answer_service: UiAnswerService, top_k: int, min_score: float, mode: RetrievalMode) -> None:
     if answer_service.knowledge_base.status != KnowledgeBaseStatus.READY:
         st.warning(answer_service.knowledge_base.message)
 
@@ -112,6 +113,7 @@ def render_ask_page(answer_service: UiAnswerService, top_k: int, min_score: floa
             question=question,
             top_k=top_k,
             min_score=min_score,
+            mode=mode,
         )
         render_answer(answer)
 
@@ -128,6 +130,12 @@ def main() -> None:
             st.success(answer_service.knowledge_base.message)
         else:
             st.warning(answer_service.knowledge_base.message)
+        mode_options = answer_service.knowledge_base.available_modes or (RetrievalMode.BM25,)
+        mode = st.selectbox(
+            "检索模式",
+            options=mode_options,
+            format_func=lambda option: option.value,
+        )
         top_k = st.slider("证据数量", min_value=1, max_value=4, value=2)
         min_score = st.slider("最低证据分数", min_value=0.0, max_value=1.0, value=0.2, step=0.05)
 
@@ -137,7 +145,7 @@ def main() -> None:
         render_build_page()
 
     with ask_tab:
-        render_ask_page(answer_service, top_k=top_k, min_score=min_score)
+        render_ask_page(answer_service, top_k=top_k, min_score=min_score, mode=mode)
 
 
 if __name__ == "__main__":
