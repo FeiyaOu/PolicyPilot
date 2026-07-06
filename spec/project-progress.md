@@ -433,13 +433,31 @@ tests/reranking/test_rerank_order.py
 
 ### 7.7 Cited Answer Generation
 
+Completed or currently in PR depending on merge state:
+
+- citation object generation from retrieval results
+- source file and page number propagation
+- contributing chunk ID tracking
+- duplicate citation removal by source file and page number
+- fallback fields for missing source metadata
+- generation-focused Makefile test target
+
+Important files:
+
+```text
+src/generation/citations.py
+tests/generation/test_citations.py
+Makefile
+```
+
+Remaining later work:
+
 Needs:
 
 - answer input schema from retrieved chunks
-- citation object generation from chunk metadata
-- duplicate citation removal
 - evidence-insufficient fallback
-- avoid parsing citations from LLM output text
+- answer generation orchestration
+- connect citations to answer output contract
 
 Planned tests:
 
