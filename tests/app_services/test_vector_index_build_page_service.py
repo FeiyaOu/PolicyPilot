@@ -14,6 +14,16 @@ class FakeEmbeddingProvider:
         return [1.0, 0.0]
 
 
+class FailingEmbeddingProvider:
+    dimension = 2
+
+    def embed_documents(self, texts):
+        raise RuntimeError("DashScope embedding request failed: 400")
+
+    def embed_query(self, text):
+        return [1.0, 0.0]
+
+
 def write_chunks(path: Path, records: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(json.dumps(record, ensure_ascii=False) for record in records), encoding="utf-8")
@@ -109,3 +119,31 @@ def test_build_vector_index_from_chunks_reports_empty_chunks_file(tmp_path):
     assert result.chunk_count == 0
     assert result.index_dir is None
     assert result.message == "chunks.jsonl 为空，无法构建 FAISS 向量索引。"
+
+
+def test_build_vector_index_from_chunks_reports_embedding_provider_failure(tmp_path):
+    chunks_path = tmp_path / "runtime" / "processed" / "chunks.jsonl"
+    write_chunks(
+        chunks_path,
+        [
+            {
+                "chunk_id": "chunk-1",
+                "content": "客户经理被投诉一次会影响评聘。",
+                "source_file": "policy-a.pdf",
+                "page_number": 2,
+                "metadata": {},
+            }
+        ],
+    )
+
+    result = build_vector_index_from_chunks(
+        chunks_path=chunks_path,
+        index_dir=tmp_path / "runtime" / "vector_index",
+        embedding_provider=FailingEmbeddingProvider(),
+        embedding_model="text-embedding-v4",
+    )
+
+    assert result.status == VectorIndexBuildStatus.FAILED
+    assert result.chunk_count == 1
+    assert result.index_dir is None
+    assert result.message == "FAISS 向量索引构建失败：Embedding 服务返回错误 400。请检查模型、维度、API Key 权限或输入文本。"
