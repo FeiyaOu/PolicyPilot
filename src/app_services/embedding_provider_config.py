@@ -31,8 +31,13 @@ class DashScopeEmbeddingProvider:
     dimension: int = 1024
     text_embedding_client: Any = field(repr=False, default=None)
 
+    _BATCH_SIZE: int = 10
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return self._embed(texts, text_type="document")
+        results: list[list[float]] = []
+        for i in range(0, len(texts), self._BATCH_SIZE):
+            results.extend(self._embed(texts[i : i + self._BATCH_SIZE], text_type="document"))
+        return results
 
     def embed_query(self, text: str) -> list[float]:
         return self._embed(text, text_type="query")[0]
@@ -49,7 +54,9 @@ class DashScopeEmbeddingProvider:
         if response.status_code != HTTPStatus.OK:
             raise RuntimeError(f"DashScope embedding request failed: {response.status_code}")
 
-        return [item.embedding for item in response.output.embeddings]
+        output = response.output
+        embeddings = output.get("embeddings") if isinstance(output, dict) else output.embeddings
+        return [item.get("embedding") if isinstance(item, dict) else item.embedding for item in embeddings]
 
 
 def build_embedding_provider_from_env(

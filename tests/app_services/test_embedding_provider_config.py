@@ -23,6 +23,13 @@ class FakeResponse:
         self.output = FakeOutput([FakeEmbedding(embedding) for embedding in embeddings])
 
 
+class FakeDictResponse:
+    status_code = HTTPStatus.OK
+
+    def __init__(self, embeddings):
+        self.output = {"embeddings": [{"embedding": embedding} for embedding in embeddings]}
+
+
 class FakeTextEmbeddingClient:
     calls = []
 
@@ -32,6 +39,14 @@ class FakeTextEmbeddingClient:
         input_value = kwargs["input"]
         texts = input_value if isinstance(input_value, list) else [input_value]
         return FakeResponse([[1.0, 0.0] for _text in texts])
+
+
+class FakeDictTextEmbeddingClient:
+    @classmethod
+    def call(cls, **kwargs):
+        input_value = kwargs["input"]
+        texts = input_value if isinstance(input_value, list) else [input_value]
+        return FakeDictResponse([[1.0, 0.0] for _text in texts])
 
 
 def test_build_embedding_provider_returns_missing_when_dashscope_key_is_absent():
@@ -74,6 +89,34 @@ def test_dashscope_provider_embeds_documents_and_query_with_text_type():
     assert result.provider.embed_query("制度问题") == [1.0, 0.0]
     assert [call["text_type"] for call in FakeTextEmbeddingClient.calls] == ["document", "query"]
     assert all(call["api_key"] == "secret-key" for call in FakeTextEmbeddingClient.calls)
+
+
+def test_dashscope_provider_accepts_dict_style_embedding_output():
+    result = build_embedding_provider_from_env(
+        env={"DASHSCOPE_API_KEY": "secret-key", "POLICYPILOT_EMBEDDING_DIMENSION": "2"},
+        text_embedding_client=FakeDictTextEmbeddingClient,
+    )
+
+    assert result.provider.embed_query("制度问题") == [1.0, 0.0]
+
+
+def test_dashscope_provider_batches_embed_documents_into_groups_of_10():
+    FakeTextEmbeddingClient.calls = []
+    result = build_embedding_provider_from_env(
+        env={"DASHSCOPE_API_KEY": "secret-key", "POLICYPILOT_EMBEDDING_DIMENSION": "2"},
+        text_embedding_client=FakeTextEmbeddingClient,
+    )
+
+    texts = ["chunk"] * 25
+    embeddings = result.provider.embed_documents(texts)
+
+    assert len(embeddings) == 25
+    assert all(v == [1.0, 0.0] for v in embeddings)
+    # 25 texts → ceil(25/10) = 3 API calls with sizes 10, 10, 5
+    assert len(FakeTextEmbeddingClient.calls) == 3
+    assert len(FakeTextEmbeddingClient.calls[0]["input"]) == 10
+    assert len(FakeTextEmbeddingClient.calls[1]["input"]) == 10
+    assert len(FakeTextEmbeddingClient.calls[2]["input"]) == 5
 
 
 def test_build_embedding_provider_rejects_invalid_dimension():
