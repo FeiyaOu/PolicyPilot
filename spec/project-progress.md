@@ -440,13 +440,19 @@ Completed or currently in PR depending on merge state:
 - contributing chunk ID tracking
 - duplicate citation removal by source file and page number
 - fallback fields for missing source metadata
+- evidence sufficiency review before answer generation
+- evidence-insufficient fallback for empty retrieval results
+- evidence-insufficient fallback for low retrieval scores
+- retrieval summary propagation for fallback/UI display
 - generation-focused Makefile test target
 
 Important files:
 
 ```text
 src/generation/citations.py
+src/generation/evidence.py
 tests/generation/test_citations.py
+tests/generation/test_insufficient_evidence.py
 Makefile
 ```
 
@@ -455,15 +461,13 @@ Remaining later work:
 Needs:
 
 - answer input schema from retrieved chunks
-- evidence-insufficient fallback
 - answer generation orchestration
 - connect citations to answer output contract
 
 Planned tests:
 
 ```text
-tests/generation/test_citations.py
-tests/generation/test_insufficient_evidence.py
+tests/generation/test_answer_output_contract.py
 ```
 
 ### 7.8 Streamlit Demo UI
