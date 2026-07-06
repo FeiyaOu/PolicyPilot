@@ -229,6 +229,14 @@ Vector retrieval uses FAISS as the local demo vector index:
 - tests use deterministic embeddings to validate index behavior without network or model dependencies
 - production/demo embeddings can later use Chinese embedding models such as `bge-m3`, `gte-qwen2`, or DashScope embeddings
 
+The retrieval service is the application-layer bridge used by UI and answer-generation flows:
+
+- supports vector-only retrieval
+- supports BM25-only retrieval
+- supports hybrid retrieval through `fuse_hybrid_scores`
+- returns one unified result shape with vector score, BM25 score, fused score, content, source file, page number, and metadata
+- keeps reranking out of the default basic retrieval path
+
 ### Step 4: Reranking
 
 Use a BGE reranker such as `BAAI/bge-reranker-base` for candidate reranking.

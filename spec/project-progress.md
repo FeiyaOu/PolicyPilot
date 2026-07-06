@@ -384,14 +384,31 @@ Do not add these before a focused feature branch verifies compatibility.
 
 ### 7.5 Hybrid Retrieval Service
 
+Completed or currently in PR depending on merge state:
+
+- application-layer retrieval service
+- vector-only retrieval mode
+- BM25-only retrieval mode
+- hybrid retrieval mode using `fuse_hybrid_scores`
+- unified result object with content, source metadata, vector score, BM25 score, and fused score
+- empty retriever/result handling
+- no rerank in the default basic retrieval path
+
+Important files:
+
+```text
+src/app_services/retrieval_service.py
+tests/app_services/test_retrieval_service.py
+```
+
+Remaining later work:
+
 Needs:
 
-- vector retriever result contract
-- BM25 retriever result contract
-- score normalization contract
-- use `fuse_hybrid_scores`
-- return top-k chunks with source metadata
 - expose retrieval mode and scores for Retrieval Lab
+- connect retrieval service to real runtime index locations
+- add multi-query orchestration over the retrieval service
+- connect retrieval service to answer generation and citations
 
 ### 7.6 Reranking
 
