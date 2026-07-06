@@ -500,10 +500,12 @@ Important files:
 ```text
 app/streamlit_app.py
 src/app_services/demo_answer_service.py
+src/app_services/embedding_provider_config.py
 src/app_services/knowledge_base_build_page_service.py
 src/app_services/knowledge_base_loader.py
 src/app_services/ui_answer_service.py
 tests/app_services/test_demo_answer_service.py
+tests/app_services/test_embedding_provider_config.py
 tests/app_services/test_knowledge_base_build_page_service.py
 tests/app_services/test_knowledge_base_loader.py
 tests/app_services/test_ui_answer_service.py
@@ -515,8 +517,14 @@ Needs:
 - evaluation report page
 - optional system settings page
 - FAISS/vector index build from the UI
-- real embedding provider configuration for non-test vector search
 - real LLM provider wiring
+
+Embedding provider configuration:
+
+- DashScope SDK dependency pinned in `requirements.txt`
+- `DASHSCOPE_API_KEY` enables vector query embedding
+- embedding model and dimension configurable by env vars
+- UI displays configured/missing status without exposing API keys
 
 Rule:
 

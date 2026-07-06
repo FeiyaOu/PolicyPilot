@@ -625,9 +625,18 @@ The first minimal Streamlit UI is a local demo surface:
 - load `runtime/processed/chunks.jsonl` when available
 - build BM25 retrieval from loaded chunk records for the first real local UI path
 - load an existing FAISS vector index when `runtime/vector_index` and an embedding provider are available
+- configure DashScope embeddings from environment variables for vector query embedding
+- show only whether the embedding provider is configured; never display API keys
 - expose available retrieval modes in the UI, starting with BM25 and enabling vector/hybrid when FAISS is loaded
 - show a clear missing/empty knowledge-base state when chunks are not available
 - do not include rerank or real LLM/API integration in the first UI slice
+
+Embedding provider configuration uses:
+
+- `DASHSCOPE_API_KEY`
+- `POLICYPILOT_EMBEDDING_PROVIDER`, default `dashscope`
+- `POLICYPILOT_EMBEDDING_MODEL`, default `text-embedding-v4`
+- `POLICYPILOT_EMBEDDING_DIMENSION`, default `1024`
 
 ### 14.3 Retrieval Lab Flow
 

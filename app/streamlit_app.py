@@ -10,6 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.app_services.demo_answer_service import DemoAnswerProvider
+from src.app_services.embedding_provider_config import EmbeddingProviderStatus, build_embedding_provider_from_env
 from src.app_services.knowledge_base_build_page_service import build_knowledge_base_from_ui
 from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
 from src.app_services.retrieval_service import RetrievalMode
@@ -26,10 +27,19 @@ st.set_page_config(
 
 @st.cache_resource
 def get_answer_service() -> UiAnswerService:
+    embedding_config = build_embedding_provider_from_env()
     return UiAnswerService(
-        knowledge_base=load_knowledge_base(PROJECT_ROOT / "runtime" / "processed" / "chunks.jsonl"),
+        knowledge_base=load_knowledge_base(
+            chunks_path=PROJECT_ROOT / "runtime" / "processed" / "chunks.jsonl",
+            vector_index_dir=PROJECT_ROOT / "runtime" / "vector_index",
+            embedding_provider=embedding_config.provider,
+        ),
         answer_provider=DemoAnswerProvider(),
     )
+
+
+def get_embedding_provider_status():
+    return build_embedding_provider_from_env()
 
 
 def render_answer(answer: AnswerResult) -> None:
@@ -123,6 +133,7 @@ def main() -> None:
     st.caption("银行内部制度问答演示")
 
     answer_service = get_answer_service()
+    embedding_config = get_embedding_provider_status()
 
     with st.sidebar:
         st.subheader("知识库状态")
@@ -130,6 +141,11 @@ def main() -> None:
             st.success(answer_service.knowledge_base.message)
         else:
             st.warning(answer_service.knowledge_base.message)
+        st.subheader("Embedding 配置")
+        if embedding_config.status == EmbeddingProviderStatus.READY:
+            st.success(f"已配置 {embedding_config.provider_name}: {embedding_config.model}")
+        else:
+            st.warning(embedding_config.message)
         mode_options = answer_service.knowledge_base.available_modes or (RetrievalMode.BM25,)
         mode = st.selectbox(
             "检索模式",
