@@ -267,6 +267,14 @@ Citation generation is deterministic and does not parse LLM output text:
 - deduplicate citations by source file and page number
 - use fallback fields when source metadata is missing
 
+Evidence sufficiency is checked before answer generation:
+
+- return an evidence-insufficient result when retrieval returns no chunks
+- return an evidence-insufficient result when the best retrieval score is below a configured threshold
+- do not fabricate citations when evidence is insufficient
+- preserve the original question and a retrieval summary for UI/debug display
+- pass selected evidence chunks and deterministic citations forward when evidence is sufficient
+
 ## 8. Knowledge Operations
 
 ### Knowledge Health
