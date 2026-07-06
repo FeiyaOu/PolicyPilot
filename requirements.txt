@@ -3,3 +3,4 @@ faiss-cpu==1.8.0.post1
 jieba==0.42.1
 numpy==1.26.4
 rank-bm25==0.2.2
+streamlit==1.58.0
