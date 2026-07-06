@@ -486,13 +486,20 @@ Current minimal UI slice:
 - selected evidence chunk display
 - retrieval summary display
 - deterministic demo answer service in `src/`
+- real `runtime/processed/chunks.jsonl` loader
+- BM25-backed UI answer service when chunks are available
+- missing/empty knowledge-base fallback state
 
 Important files:
 
 ```text
 app/streamlit_app.py
 src/app_services/demo_answer_service.py
+src/app_services/knowledge_base_loader.py
+src/app_services/ui_answer_service.py
 tests/app_services/test_demo_answer_service.py
+tests/app_services/test_knowledge_base_loader.py
+tests/app_services/test_ui_answer_service.py
 ```
 
 Needs:
@@ -501,7 +508,7 @@ Needs:
 - retrieval lab page
 - evaluation report page
 - optional system settings page
-- real index loading in the UI
+- FAISS/vector index loading in the UI
 - real LLM provider wiring
 
 Rule:
