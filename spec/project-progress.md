@@ -485,6 +485,9 @@ Current minimal UI slice:
 - citation display with source file and page number
 - selected evidence chunk display
 - retrieval summary display
+- knowledge-base build tab
+- uploaded PDF and `data/raw` PDF build inputs
+- processed chunk JSONL persistence to `runtime/processed/chunks.jsonl`
 - deterministic demo answer service in `src/`
 - real `runtime/processed/chunks.jsonl` loader
 - BM25-backed UI answer service when chunks are available
@@ -495,19 +498,21 @@ Important files:
 ```text
 app/streamlit_app.py
 src/app_services/demo_answer_service.py
+src/app_services/knowledge_base_build_page_service.py
 src/app_services/knowledge_base_loader.py
 src/app_services/ui_answer_service.py
 tests/app_services/test_demo_answer_service.py
+tests/app_services/test_knowledge_base_build_page_service.py
 tests/app_services/test_knowledge_base_loader.py
 tests/app_services/test_ui_answer_service.py
 ```
 
 Needs:
 
-- knowledge-base build page
 - retrieval lab page
 - evaluation report page
 - optional system settings page
+- FAISS/vector index build from the UI
 - FAISS/vector index loading in the UI
 - real LLM provider wiring
 
