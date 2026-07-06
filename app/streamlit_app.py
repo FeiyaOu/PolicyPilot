@@ -15,6 +15,7 @@ from src.app_services.knowledge_base_build_page_service import build_knowledge_b
 from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
 from src.app_services.retrieval_service import RetrievalMode
 from src.app_services.ui_answer_service import UiAnswerService
+from src.app_services.vector_index_build_page_service import VectorIndexBuildStatus, build_vector_index_from_chunks
 from src.generation.answer_contract import AnswerResult, AnswerStatus
 
 
@@ -80,7 +81,7 @@ def _format_score(score: float | None) -> str:
     return f"{score:.2f}"
 
 
-def render_build_page() -> None:
+def render_build_page(embedding_config) -> None:
     uploaded_files = st.file_uploader(
         "上传制度 PDF",
         type="pdf",
@@ -99,9 +100,20 @@ def render_build_page() -> None:
             st.warning(result.message)
             return
 
+        vector_result = build_vector_index_from_chunks(
+            chunks_path=result.output_path,
+            index_dir=PROJECT_ROOT / "runtime" / "vector_index",
+            embedding_provider=embedding_config.provider,
+            embedding_model=embedding_config.model,
+        )
         get_answer_service.clear()
         st.success(result.message)
         st.caption(f"输出位置: {result.output_path}")
+        if vector_result.status == VectorIndexBuildStatus.BUILT:
+            st.success(vector_result.message)
+            st.caption(f"向量索引位置: {vector_result.index_dir}")
+        else:
+            st.warning(vector_result.message)
 
 
 def render_ask_page(answer_service: UiAnswerService, top_k: int, min_score: float, mode: RetrievalMode) -> None:
@@ -158,7 +170,7 @@ def main() -> None:
     build_tab, ask_tab = st.tabs(["构建知识库", "制度问答"])
 
     with build_tab:
-        render_build_page()
+        render_build_page(embedding_config)
 
     with ask_tab:
         render_ask_page(answer_service, top_k=top_k, min_score=min_score, mode=mode)

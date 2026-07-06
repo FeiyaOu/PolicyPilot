@@ -491,6 +491,7 @@ Current minimal UI slice:
 - deterministic demo answer service in `src/`
 - real `runtime/processed/chunks.jsonl` loader
 - BM25-backed UI answer service when chunks are available
+- FAISS vector index build from the UI when embeddings are configured
 - optional FAISS vector index loading in the knowledge-base loader
 - UI retrieval mode selector driven by available retrieval modes
 - missing/empty knowledge-base fallback state
@@ -504,11 +505,13 @@ src/app_services/embedding_provider_config.py
 src/app_services/knowledge_base_build_page_service.py
 src/app_services/knowledge_base_loader.py
 src/app_services/ui_answer_service.py
+src/app_services/vector_index_build_page_service.py
 tests/app_services/test_demo_answer_service.py
 tests/app_services/test_embedding_provider_config.py
 tests/app_services/test_knowledge_base_build_page_service.py
 tests/app_services/test_knowledge_base_loader.py
 tests/app_services/test_ui_answer_service.py
+tests/app_services/test_vector_index_build_page_service.py
 ```
 
 Needs:
@@ -516,7 +519,6 @@ Needs:
 - retrieval lab page
 - evaluation report page
 - optional system settings page
-- FAISS/vector index build from the UI
 - real LLM provider wiring
 
 Embedding provider configuration:
@@ -525,6 +527,8 @@ Embedding provider configuration:
 - `DASHSCOPE_API_KEY` enables vector query embedding
 - embedding model and dimension configurable by env vars
 - UI displays configured/missing status without exposing API keys
+- knowledge-base build UI creates `runtime/vector_index` when the provider is ready
+- missing provider skips FAISS build and leaves BM25 retrieval available
 
 Rule:
 

@@ -582,7 +582,8 @@ The user should feel they are using a policy assistant, but the interviewer shou
 4. User clicks `构建知识库`.
 5. App extracts text, chunks documents, stores metadata in `runtime/processed/chunks.jsonl`, and reports indexing results.
 6. BM25 retrieval is rebuilt from `chunks.jsonl` when the answer service reloads.
-7. FAISS/vector index build remains a later UI slice.
+7. If an embedding provider is configured, the app builds and saves a FAISS vector index to `runtime/vector_index`.
+8. If no embedding provider is configured, the app keeps BM25 available and reports that FAISS build was skipped.
 
 Indexing result should show:
 
@@ -624,6 +625,7 @@ The first minimal Streamlit UI is a local demo surface:
 - show citations, selected evidence chunks, and retrieval summary
 - load `runtime/processed/chunks.jsonl` when available
 - build BM25 retrieval from loaded chunk records for the first real local UI path
+- build `runtime/vector_index` from `chunks.jsonl` when the user rebuilds the knowledge base and embeddings are configured
 - load an existing FAISS vector index when `runtime/vector_index` and an embedding provider are available
 - configure DashScope embeddings from environment variables for vector query embedding
 - show only whether the embedding provider is configured; never display API keys
