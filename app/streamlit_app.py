@@ -13,11 +13,15 @@ from src.app_services.demo_answer_service import DemoAnswerProvider
 from src.app_services.embedding_provider_config import EmbeddingProviderStatus, build_embedding_provider_from_env
 from src.app_services.knowledge_base_build_page_service import build_knowledge_base_from_ui
 from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
+from src.app_services.local_env import load_env_file
 from src.app_services.llm_provider_config import LlmProviderStatus, build_llm_provider_from_env
 from src.app_services.retrieval_service import RetrievalMode
 from src.app_services.ui_answer_service import UiAnswerService
 from src.app_services.vector_index_build_page_service import VectorIndexBuildStatus, build_vector_index_from_chunks
 from src.generation.answer_contract import AnswerResult, AnswerStatus
+
+
+load_env_file(PROJECT_ROOT / ".env")
 
 
 st.set_page_config(
