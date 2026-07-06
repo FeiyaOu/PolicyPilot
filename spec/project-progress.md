@@ -519,7 +519,6 @@ Needs:
 - retrieval lab page
 - evaluation report page
 - optional system settings page
-- real LLM provider wiring
 
 Embedding provider configuration:
 
@@ -529,6 +528,18 @@ Embedding provider configuration:
 - UI displays configured/missing status without exposing API keys
 - knowledge-base build UI creates `runtime/vector_index` when the provider is ready
 - missing provider skips FAISS build and leaves BM25 retrieval available
+
+LLM provider wiring:
+
+- DashScope SDK dependency is reused from `requirements.txt`
+- `DASHSCOPE_API_KEY` enables real grounded answer generation
+- LLM model configurable with `POLICYPILOT_LLM_MODEL`, default `qwen-plus`
+- prompt builder injects question, source file, page number, and chunk content as evidence
+- UI displays configured/missing status without exposing API keys
+- missing key falls back to the local demo answer provider
+- provider/API failures return a safe fallback without exposing exception text
+- blank model responses are rejected and shown as generation fallback
+- generation fallback preserves selected evidence and citations
 
 Rule:
 

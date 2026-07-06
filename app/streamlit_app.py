@@ -13,6 +13,7 @@ from src.app_services.demo_answer_service import DemoAnswerProvider
 from src.app_services.embedding_provider_config import EmbeddingProviderStatus, build_embedding_provider_from_env
 from src.app_services.knowledge_base_build_page_service import build_knowledge_base_from_ui
 from src.app_services.knowledge_base_loader import KnowledgeBaseStatus, load_knowledge_base
+from src.app_services.llm_provider_config import LlmProviderStatus, build_llm_provider_from_env
 from src.app_services.retrieval_service import RetrievalMode
 from src.app_services.ui_answer_service import UiAnswerService
 from src.app_services.vector_index_build_page_service import VectorIndexBuildStatus, build_vector_index_from_chunks
@@ -29,13 +30,14 @@ st.set_page_config(
 @st.cache_resource
 def get_answer_service() -> UiAnswerService:
     embedding_config = build_embedding_provider_from_env()
+    llm_config = build_llm_provider_from_env()
     return UiAnswerService(
         knowledge_base=load_knowledge_base(
             chunks_path=PROJECT_ROOT / "runtime" / "processed" / "chunks.jsonl",
             vector_index_dir=PROJECT_ROOT / "runtime" / "vector_index",
             embedding_provider=embedding_config.provider,
         ),
-        answer_provider=DemoAnswerProvider(),
+        answer_provider=llm_config.provider or DemoAnswerProvider(),
     )
 
 
@@ -43,8 +45,12 @@ def get_embedding_provider_status():
     return build_embedding_provider_from_env()
 
 
+def get_llm_provider_status():
+    return build_llm_provider_from_env()
+
+
 def render_answer(answer: AnswerResult) -> None:
-    if answer.status == AnswerStatus.INSUFFICIENT_EVIDENCE:
+    if answer.status != AnswerStatus.ANSWER_READY:
         st.warning(answer.fallback_message)
     else:
         st.success(answer.answer_text)
@@ -146,6 +152,7 @@ def main() -> None:
 
     answer_service = get_answer_service()
     embedding_config = get_embedding_provider_status()
+    llm_config = get_llm_provider_status()
 
     with st.sidebar:
         st.subheader("知识库状态")
@@ -158,6 +165,11 @@ def main() -> None:
             st.success(f"已配置 {embedding_config.provider_name}: {embedding_config.model}")
         else:
             st.warning(embedding_config.message)
+        st.subheader("LLM 配置")
+        if llm_config.status == LlmProviderStatus.READY:
+            st.success(f"已配置 {llm_config.provider_name}: {llm_config.model}")
+        else:
+            st.warning(llm_config.message)
         mode_options = answer_service.knowledge_base.available_modes or (RetrievalMode.BM25,)
         mode = st.selectbox(
             "检索模式",
