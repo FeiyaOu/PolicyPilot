@@ -537,6 +537,9 @@ LLM provider wiring:
 - prompt builder injects question, source file, page number, and chunk content as evidence
 - UI displays configured/missing status without exposing API keys
 - missing key falls back to the local demo answer provider
+- provider/API failures return a safe fallback without exposing exception text
+- blank model responses are rejected and shown as generation fallback
+- generation fallback preserves selected evidence and citations
 
 Rule:
 

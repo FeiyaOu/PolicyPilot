@@ -50,7 +50,7 @@ def get_llm_provider_status():
 
 
 def render_answer(answer: AnswerResult) -> None:
-    if answer.status == AnswerStatus.INSUFFICIENT_EVIDENCE:
+    if answer.status != AnswerStatus.ANSWER_READY:
         st.warning(answer.fallback_message)
     else:
         st.success(answer.answer_text)
