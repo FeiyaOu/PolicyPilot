@@ -613,6 +613,15 @@ The answer page should show:
 - retrieval scores
 - rerank scores when available
 
+The first minimal Streamlit UI is a local demo surface:
+
+- keep Streamlit as a thin rendering layer under `app/streamlit_app.py`
+- route question answering through app services in `src/`
+- show answer-ready and evidence-insufficient states
+- show citations, selected evidence chunks, and retrieval summary
+- use a deterministic demo retrieval service until real index loading is wired into the UI
+- do not include rerank or real LLM/API integration in the first UI slice
+
 ### 14.3 Retrieval Lab Flow
 
 The Retrieval Lab is for demonstrating technical depth.

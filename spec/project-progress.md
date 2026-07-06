@@ -476,13 +476,33 @@ tests/generation/test_llm_answer_provider.py
 
 ### 7.8 Streamlit Demo UI
 
+Current minimal UI slice:
+
+- Streamlit app entrypoint
+- question input and answer button
+- answer-ready display
+- evidence-insufficient fallback display
+- citation display with source file and page number
+- selected evidence chunk display
+- retrieval summary display
+- deterministic demo answer service in `src/`
+
+Important files:
+
+```text
+app/streamlit_app.py
+src/app_services/demo_answer_service.py
+tests/app_services/test_demo_answer_service.py
+```
+
 Needs:
 
 - knowledge-base build page
-- ask policy assistant page
 - retrieval lab page
 - evaluation report page
 - optional system settings page
+- real index loading in the UI
+- real LLM provider wiring
 
 Rule:
 
