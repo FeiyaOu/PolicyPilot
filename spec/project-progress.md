@@ -444,13 +444,18 @@ Completed or currently in PR depending on merge state:
 - evidence-insufficient fallback for empty retrieval results
 - evidence-insufficient fallback for low retrieval scores
 - retrieval summary propagation for fallback/UI display
+- answer output contract from evidence review
+- answer-ready output with selected context snippets and citations
+- evidence-insufficient output with fixed fallback message
 - generation-focused Makefile test target
 
 Important files:
 
 ```text
+src/generation/answer_contract.py
 src/generation/citations.py
 src/generation/evidence.py
+tests/generation/test_answer_output_contract.py
 tests/generation/test_citations.py
 tests/generation/test_insufficient_evidence.py
 Makefile
@@ -460,14 +465,13 @@ Remaining later work:
 
 Needs:
 
-- answer input schema from retrieved chunks
 - answer generation orchestration
-- connect citations to answer output contract
+- LLM-generated answer text from selected context
 
 Planned tests:
 
 ```text
-tests/generation/test_answer_output_contract.py
+tests/generation/test_basic_answer_generation.py
 ```
 
 ### 7.8 Streamlit Demo UI
