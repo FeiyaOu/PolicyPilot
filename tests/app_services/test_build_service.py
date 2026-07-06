@@ -1,14 +1,21 @@
 import json
 
+import pdfplumber
+
 from src.app_services.upload_flow import BuildRequest, DocumentInput
 from src.ingestion.models import DocumentChunk
 from src.ingestion.pdf_ingestion import IngestionSummary, IngestionWarning, PdfIngestionResult
 from src.app_services import build_service
 
 
-class FakePdfReader:
-    def __init__(self, stream):
-        self.stream = stream
+class FakePdf:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    pages = []
 
 
 def make_result(source_file: str, page_number: int, content: str, warning_count: int = 0) -> PdfIngestionResult:
@@ -74,19 +81,23 @@ def test_build_knowledge_base_ingests_uploaded_documents_from_bytes(monkeypatch)
         ]
     )
     captured_source_files = []
+    captured_bytes = []
 
-    def fake_ingest_pdf_reader(reader, source_file):
+    def fake_pdfplumber_open(stream):
+        captured_bytes.append(stream.read())
+        return FakePdf()
+
+    def fake_ingest_pdf_reader(pdf, source_file):
         captured_source_files.append(source_file)
-        assert isinstance(reader, FakePdfReader)
-        assert reader.stream.getvalue() == b"uploaded pdf bytes"
         return make_result(source_file, 1, "上传政策内容")
 
-    monkeypatch.setattr(build_service, "PdfReader", FakePdfReader)
+    monkeypatch.setattr(pdfplumber, "open", fake_pdfplumber_open)
     monkeypatch.setattr(build_service, "ingest_pdf_reader", fake_ingest_pdf_reader)
 
     result = build_service.build_knowledge_base(request)
 
     assert captured_source_files == ["上传政策.pdf"]
+    assert captured_bytes == [b"uploaded pdf bytes"]
     assert result.summary.document_count == 1
     assert result.chunks[0].content == "上传政策内容"
 
@@ -107,7 +118,7 @@ def test_build_knowledge_base_merges_chunks_warnings_and_summary(tmp_path, monke
     def fake_ingest_pdf_reader(reader, source_file):
         return make_result(source_file, 2, "上传政策内容", warning_count=2)
 
-    monkeypatch.setattr(build_service, "PdfReader", FakePdfReader)
+    monkeypatch.setattr(pdfplumber, "open", lambda s: FakePdf())
     monkeypatch.setattr(build_service, "ingest_pdf_file", fake_ingest_pdf_file)
     monkeypatch.setattr(build_service, "ingest_pdf_reader", fake_ingest_pdf_reader)
 
