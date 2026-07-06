@@ -627,9 +627,11 @@ The first minimal Streamlit UI is a local demo surface:
 - load an existing FAISS vector index when `runtime/vector_index` and an embedding provider are available
 - configure DashScope embeddings from environment variables for vector query embedding
 - show only whether the embedding provider is configured; never display API keys
+- configure DashScope LLM generation from environment variables for grounded answer generation
+- fall back to the local demo answer provider when the LLM API key is missing
 - expose available retrieval modes in the UI, starting with BM25 and enabling vector/hybrid when FAISS is loaded
 - show a clear missing/empty knowledge-base state when chunks are not available
-- do not include rerank or real LLM/API integration in the first UI slice
+- do not include rerank in the first UI slice
 
 Embedding provider configuration uses:
 
@@ -637,6 +639,14 @@ Embedding provider configuration uses:
 - `POLICYPILOT_EMBEDDING_PROVIDER`, default `dashscope`
 - `POLICYPILOT_EMBEDDING_MODEL`, default `text-embedding-v4`
 - `POLICYPILOT_EMBEDDING_DIMENSION`, default `1024`
+
+LLM provider configuration uses:
+
+- `DASHSCOPE_API_KEY`
+- `POLICYPILOT_LLM_PROVIDER`, default `dashscope`
+- `POLICYPILOT_LLM_MODEL`, default `qwen-plus`
+
+LLM requests are built from a grounded system/user prompt. The prompt includes the user question and numbered evidence snippets with source file and page number. The assistant must answer in Chinese using only supplied evidence and state uncertainty when evidence is insufficient.
 
 ### 14.3 Retrieval Lab Flow
 

@@ -517,7 +517,6 @@ Needs:
 - evaluation report page
 - optional system settings page
 - FAISS/vector index build from the UI
-- real LLM provider wiring
 
 Embedding provider configuration:
 
@@ -525,6 +524,15 @@ Embedding provider configuration:
 - `DASHSCOPE_API_KEY` enables vector query embedding
 - embedding model and dimension configurable by env vars
 - UI displays configured/missing status without exposing API keys
+
+LLM provider wiring:
+
+- DashScope SDK dependency is reused from `requirements.txt`
+- `DASHSCOPE_API_KEY` enables real grounded answer generation
+- LLM model configurable with `POLICYPILOT_LLM_MODEL`, default `qwen-plus`
+- prompt builder injects question, source file, page number, and chunk content as evidence
+- UI displays configured/missing status without exposing API keys
+- missing key falls back to the local demo answer provider
 
 Rule:
 
