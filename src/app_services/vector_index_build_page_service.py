@@ -13,6 +13,7 @@ class VectorIndexBuildStatus(StrEnum):
     SKIPPED = "skipped"
     MISSING_CHUNKS = "missing_chunks"
     EMPTY_CHUNKS = "empty_chunks"
+    FAILED = "failed"
 
 
 @dataclass(frozen=True)
@@ -59,10 +60,18 @@ def build_vector_index_from_chunks(
             message="chunks.jsonl 为空，无法构建 FAISS 向量索引。",
         )
 
-    output_dir = save_faiss_vector_index(
-        build_faiss_vector_index(chunk_records, embedding_provider),
-        index_dir,
-    )
+    try:
+        vector_index = build_faiss_vector_index(chunk_records, embedding_provider)
+        output_dir = save_faiss_vector_index(vector_index, index_dir)
+    except Exception as error:
+        return VectorIndexBuildPageResult(
+            status=VectorIndexBuildStatus.FAILED,
+            chunk_count=len(chunk_records),
+            index_dir=None,
+            embedding_model=embedding_model,
+            message=_build_embedding_failure_message(error),
+        )
+
     model_label = embedding_model or "unknown"
     return VectorIndexBuildPageResult(
         status=VectorIndexBuildStatus.BUILT,
@@ -71,3 +80,11 @@ def build_vector_index_from_chunks(
         embedding_model=embedding_model,
         message=f"FAISS 向量索引构建完成：{len(chunk_records)} 个 chunk，模型 {model_label}。",
     )
+
+
+def _build_embedding_failure_message(error: Exception) -> str:
+    error_text = str(error)
+    if "400" in error_text:
+        return "FAISS 向量索引构建失败：Embedding 服务返回错误 400。请检查模型、维度、API Key 权限或输入文本。"
+
+    return "FAISS 向量索引构建失败：Embedding 服务调用失败。请检查模型、维度、API Key 权限或网络连接。"
