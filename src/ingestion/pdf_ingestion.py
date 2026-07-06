@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from PyPDF2 import PdfReader
-
 from src.ingestion.chunk_splitter import SplitConfig, split_page_text
 from src.ingestion.models import DocumentChunk
 
@@ -79,11 +77,13 @@ def ingest_pdf_reader(
 
 
 def ingest_pdf_file(pdf_path: str | Path, split_config: SplitConfig | None = None) -> PdfIngestionResult:
+    import pdfplumber
+
     path = Path(pdf_path)
     if not path.exists():
         raise FileNotFoundError(f"PDF file not found: {path}")
     if path.suffix.lower() != ".pdf":
         raise ValueError(f"Expected a PDF file, got: {path.name}")
 
-    reader = PdfReader(path)
-    return ingest_pdf_reader(reader, source_file=path.name, split_config=split_config)
+    with pdfplumber.open(path) as pdf:
+        return ingest_pdf_reader(pdf, source_file=path.name, split_config=split_config)

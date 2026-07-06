@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
-from PyPDF2 import PdfReader
+import pdfplumber
 
 from src.app_services.upload_flow import BuildRequest, DocumentInput
 from src.ingestion.chunk_store import write_chunks_jsonl
@@ -56,7 +56,7 @@ def _ingest_document(document: DocumentInput):
     if document.origin == "upload":
         if document.content is None:
             raise ValueError(f"Uploaded document requires content: {document.source_file}")
-        reader = PdfReader(BytesIO(document.content))
-        return ingest_pdf_reader(reader, source_file=document.source_file)
+        with pdfplumber.open(BytesIO(document.content)) as pdf:
+            return ingest_pdf_reader(pdf, source_file=document.source_file)
 
     raise ValueError(f"Unsupported document origin: {document.origin}")
