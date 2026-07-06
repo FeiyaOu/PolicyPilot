@@ -275,6 +275,15 @@ Evidence sufficiency is checked before answer generation:
 - preserve the original question and a retrieval summary for UI/debug display
 - pass selected evidence chunks and deterministic citations forward when evidence is sufficient
 
+Answer output uses a stable deterministic contract before LLM integration:
+
+- include the original question
+- expose an answer status for answer-ready vs evidence-insufficient states
+- include selected context snippets with source metadata and scores
+- include deterministic citations and retrieval summary
+- return a fixed fallback message when evidence is insufficient
+- allow generated answer text to be attached later without changing the UI contract
+
 ## 8. Knowledge Operations
 
 ### Knowledge Health
