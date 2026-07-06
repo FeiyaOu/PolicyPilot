@@ -648,6 +648,14 @@ LLM provider configuration uses:
 
 LLM requests are built from a grounded system/user prompt. The prompt includes the user question and numbered evidence snippets with source file and page number. The assistant must answer in Chinese using only supplied evidence and state uncertainty when evidence is insufficient.
 
+LLM answer generation has safe fallback behavior:
+
+- missing API key uses the local demo answer provider
+- provider exceptions are caught at the generation boundary
+- provider exception messages are not shown to the user, avoiding accidental secret leakage
+- blank model responses are rejected instead of displayed as valid answers
+- fallback answers preserve selected evidence, citations, and retrieval summary for debugging
+
 ### 14.3 Retrieval Lab Flow
 
 The Retrieval Lab is for demonstrating technical depth.

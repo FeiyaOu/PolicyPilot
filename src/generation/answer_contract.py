@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
@@ -11,6 +11,7 @@ from src.generation.evidence import EvidenceReview
 class AnswerStatus(StrEnum):
     ANSWER_READY = "answer_ready"
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    GENERATION_FAILED = "generation_failed"
 
 
 @dataclass(frozen=True)
@@ -53,4 +54,19 @@ def build_answer_output(review: EvidenceReview, answer_text: str | None = None) 
         ],
         citations=review.citations,
         retrieval_summary=review.retrieval_summary,
+    )
+
+
+def build_generation_fallback_output(review: EvidenceReview, fallback_message: str, reason: str) -> AnswerResult:
+    answer_output = build_answer_output(review)
+    return replace(
+        answer_output,
+        status=AnswerStatus.GENERATION_FAILED,
+        answer_text=None,
+        fallback_message=fallback_message,
+        retrieval_summary={
+            **answer_output.retrieval_summary,
+            "generation_status": "failed",
+            "generation_reason": reason,
+        },
     )

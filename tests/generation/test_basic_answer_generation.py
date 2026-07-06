@@ -16,6 +16,15 @@ class FakeAnswerProvider:
         return self.answer_text
 
 
+@dataclass
+class FailingAnswerProvider:
+    received_input: AnswerGenerationInput | None = None
+
+    def generate(self, generation_input: AnswerGenerationInput) -> str:
+        self.received_input = generation_input
+        raise RuntimeError("secret-key should not be exposed")
+
+
 def make_result(
     chunk_id: str,
     content: str = "客户经理被投诉一次会影响评聘。",
@@ -82,3 +91,52 @@ def test_generate_answer_preserves_citations_and_retrieval_summary():
 
     assert answer.citations == review.citations
     assert answer.retrieval_summary == review.retrieval_summary
+
+
+def test_generate_answer_returns_safe_fallback_when_provider_raises():
+    provider = FailingAnswerProvider()
+    review = evaluate_evidence(
+        "客户经理投诉会影响评聘吗？",
+        [make_result("chunk-1")],
+    )
+
+    answer = generate_answer(review, provider)
+
+    assert answer.status == AnswerStatus.GENERATION_FAILED
+    assert answer.answer_text is None
+    assert answer.fallback_message == "模型回答生成失败，请稍后重试或切换本地演示回答。"
+    assert "secret-key" not in answer.fallback_message
+    assert answer.contexts[0]["chunk_id"] == "chunk-1"
+    assert answer.citations == review.citations
+    assert answer.retrieval_summary["reason"] == "sufficient_evidence"
+    assert answer.retrieval_summary["generation_status"] == "failed"
+    assert answer.retrieval_summary["generation_reason"] == "provider_error"
+
+
+def test_generate_answer_rejects_blank_provider_response():
+    provider = FakeAnswerProvider(answer_text="  \n\t")
+    review = evaluate_evidence(
+        "客户经理投诉会影响评聘吗？",
+        [make_result("chunk-1")],
+    )
+
+    answer = generate_answer(review, provider)
+
+    assert answer.status == AnswerStatus.GENERATION_FAILED
+    assert answer.answer_text is None
+    assert answer.fallback_message == "模型返回为空，已拒绝生成无依据答案。"
+    assert answer.contexts[0]["chunk_id"] == "chunk-1"
+    assert answer.retrieval_summary["generation_reason"] == "empty_answer"
+
+
+def test_generate_answer_strips_provider_response_before_returning():
+    provider = FakeAnswerProvider(answer_text="  会影响，需结合投诉性质和处理结果判断。\n")
+    review = evaluate_evidence(
+        "客户经理投诉会影响评聘吗？",
+        [make_result("chunk-1")],
+    )
+
+    answer = generate_answer(review, provider)
+
+    assert answer.status == AnswerStatus.ANSWER_READY
+    assert answer.answer_text == "会影响，需结合投诉性质和处理结果判断。"
