@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,16 +14,22 @@ class FakePage:
         return self.text
 
 
-class FakePdfReader:
-    def __init__(self, path: str | Path):
-        self.path = Path(path)
+class FakePdf:
+    def __init__(self, *args, **kwargs):
         self.pages = [FakePage("测试 PDF 第一页政策内容。")]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
 
 
 def test_ingest_pdf_file_loads_pdf_reader_and_preserves_file_name(tmp_path, monkeypatch):
+    import pdfplumber
     pdf_path = tmp_path / "客户经理考核办法.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 fake test pdf")
-    monkeypatch.setattr(pdf_ingestion, "PdfReader", FakePdfReader)
+    monkeypatch.setattr(pdfplumber, "open", FakePdf)
 
     result = pdf_ingestion.ingest_pdf_file(pdf_path)
 
