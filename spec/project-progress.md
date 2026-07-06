@@ -346,14 +346,32 @@ Add only when implemented and verified in Python 3.12.
 
 ### 7.4 Vector Indexing With FAISS
 
+Completed or currently in PR depending on merge state:
+
+- verified `faiss-cpu==1.8.0.post1` on Python 3.12.6/macOS
+- pinned `numpy==1.26.4` for FAISS compatibility
+- built a FAISS `IndexFlatL2` wrapper
+- can build vector index from chunk records or processed `chunks.jsonl`
+- can save/load FAISS index plus chunk metadata under a runtime index directory
+- search returns chunk ID, normalized vector score, content, source file, page number, and metadata
+- tests use deterministic embeddings so FAISS behavior is testable without external models or APIs
+
+Important files:
+
+```text
+src/retrieval/vector_index.py
+tests/retrieval/test_vector_index.py
+requirements.txt
+```
+
+Remaining later work:
+
 Needs:
 
-- embedding model decision
-- build FAISS index from `runtime/processed/chunks.jsonl`
-- persist FAISS index under ignored runtime/index path
-- load FAISS index for retrieval
-- map FAISS results back to chunk metadata
-- convert FAISS distance into normalized similarity score before fusion
+- choose the real demo embedding provider
+- connect vector index build into the knowledge-base build flow
+- integrate vector search with hybrid score fusion
+- expose vector-only mode in Retrieval Lab
 
 Possible dependencies:
 

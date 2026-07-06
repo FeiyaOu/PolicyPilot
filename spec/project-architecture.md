@@ -219,6 +219,16 @@ BM25 sparse retrieval is part of the basic retrieval layer, not an advanced rera
 - return chunk IDs, normalized BM25 scores, content, and source metadata
 - keep reranking out of the default retrieval path until the basic vector/BM25/hybrid flow is usable
 
+Vector retrieval uses FAISS as the local demo vector index:
+
+- build FAISS indexes from processed chunk records in `runtime/processed/chunks.jsonl`
+- use `faiss.IndexFlatL2` for the first exact-search implementation
+- persist vector indexes under ignored `runtime/indexes/` paths
+- store chunk metadata beside the FAISS index so search results can cite source files and pages
+- convert FAISS L2 distances into normalized similarity scores before hybrid fusion
+- tests use deterministic embeddings to validate index behavior without network or model dependencies
+- production/demo embeddings can later use Chinese embedding models such as `bge-m3`, `gte-qwen2`, or DashScope embeddings
+
 ### Step 4: Reranking
 
 Use a BGE reranker such as `BAAI/bge-reranker-base` for candidate reranking.
