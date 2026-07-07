@@ -29,6 +29,10 @@ from src.app_services.langchain_retrievers import (
     run_hybrid,
     run_multiquery,
 )
+from src.app_services.adaptive_rag_graph import (
+    build_adaptive_rag_graph,
+    run_adaptive_rag,
+)
 from src.app_services.local_env import load_env_file
 from src.ingestion.chunk_store import read_chunks_jsonl
 
@@ -138,11 +142,12 @@ def render_sidebar():
         st.subheader("检索模式")
         retrieval_mode = st.selectbox(
             "选择检索方式",
-            options=["standard", "multiquery", "hybrid"],
+            options=["standard", "multiquery", "hybrid", "adaptive"],
             format_func=lambda x: {
                 "standard": "标准向量检索",
                 "multiquery": "🔀 MultiQuery 多路查询",
                 "hybrid": "⚖️ Hybrid BM25+Vector",
+                "adaptive": "🤖 Adaptive RAG (LangGraph)",
             }[x],
         )
         use_rewrite = st.toggle("✨ 开启 Query 改写", value=False)
@@ -174,7 +179,7 @@ def main():
 
     st.title("🦜 LangChain RAG 制度问答")
     rewrite_label = "LCEL改写:on" if use_rewrite else "LCEL改写:off"
-    mode_label_map = {"standard": "标准向量", "multiquery": "MultiQuery", "hybrid": "Hybrid"}
+    mode_label_map = {"standard": "标准向量", "multiquery": "MultiQuery", "hybrid": "Hybrid", "adaptive": "Adaptive(LangGraph)"}
     st.caption(f"{rewrite_label}  |  {mode_label_map.get(retrieval_mode, retrieval_mode)}  |  SummaryBuffer Memory")
 
     service = get_service()
@@ -227,6 +232,33 @@ def main():
                 # Step 2: retrieve with selected mode
                 docs = None
                 mode_label = retrieval_mode
+                if retrieval_mode == "adaptive":
+                    ag_result = run_adaptive_rag(
+                        build_adaptive_rag_graph(
+                            bm25_retriever=bm25_retriever,
+                            vector_retriever=vector_retriever,
+                            llm=service.llm,
+                        ),
+                        question=search_query,
+                        chat_history=st.session_state.lc_messages[:-1],
+                        summary=st.session_state.lc_summary,
+                    )
+                    st.session_state.lc_messages.append(
+                        {"role": "assistant", "content": ag_result.answer}
+                    )
+                    st.session_state.lc_last_sources = ag_result.sources
+                    st.session_state.lc_last_rewritten = rewritten
+                    st.session_state.lc_last_retrieval_mode = (
+                        " → ".join(ag_result.retrieval_path)
+                    )
+                    if ag_result.answer:
+                        st.markdown(ag_result.answer)
+                    else:
+                        st.warning("回答生成失败，请稍后重试。")
+                    _maybe_compress(service.llm)
+                    st.rerun()
+                    return
+
                 if retrieval_mode == "multiquery":
                     docs = run_multiquery(search_query, vector_retriever, service.llm)
                 elif retrieval_mode == "hybrid" and bm25_retriever is not None:
