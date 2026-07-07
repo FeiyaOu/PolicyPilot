@@ -47,17 +47,19 @@ class LangChainRagService:
         question: str,
         chat_history: list[dict],
         summary: str = "",
+        docs: list | None = None,
     ) -> LangChainRagResult:
-        try:
-            docs = self.retriever.invoke(question)
-        except Exception:
-            return LangChainRagResult(
-                answer="",
-                sources=[],
-                retrieval_count=0,
-                used_summary=bool(summary),
-                status=LangChainRagStatus.FAILED,
-            )
+        if docs is None:
+            try:
+                docs = self.retriever.invoke(question)
+            except Exception:
+                return LangChainRagResult(
+                    answer="",
+                    sources=[],
+                    retrieval_count=0,
+                    used_summary=bool(summary),
+                    status=LangChainRagStatus.FAILED,
+                )
 
         if not docs:
             return LangChainRagResult(
